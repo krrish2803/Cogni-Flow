@@ -31,7 +31,9 @@ The product’s core promise is simple: **not an answer bot—a learning process
 | --- | --- |
 | Landing page | Explains the product vision, problem, solution, impact, and differentiator. |
 | Student workspace | Lets a student create sessions, ask questions, receive scaffolded AI guidance, complete checkpoints, and view learning progress. |
+| Judge Mode | No-sign-up walkthrough with preloaded Student, Educator, Admin, and learning-impact evidence. |
 | Educator dashboard | Shows learning evidence: sessions, hints, checkpoints, mastery, misconceptions, explain-back scores, and actions. |
+| Admin dashboard | Shows all students, platform-wide sessions, learning metrics, intervention risk, and system health. |
 | REST API | Provides auth, conversation, AI tutoring, learning state, evidence, practice, and dashboard capabilities. |
 
 ## Tech stack
@@ -93,7 +95,8 @@ JWT_EXPIRES_IN=15m
 REFRESH_TOKEN_EXPIRES_DAYS=30
 NVIDIA_API_KEY=your-nvidia-key
 NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
-NVIDIA_MODEL=meta/llama-3.1-70b-instruct
+NVIDIA_MODEL=meta/llama-3.1-8b-instruct
+NVIDIA_TUTOR_MAX_TOKENS=220
 CLIENT_URL=http://localhost:4000
 STRICT_TUTOR_MODE=true
 ```
@@ -121,6 +124,10 @@ The seed command creates:
 
 It also prints the student ID needed for the educator dashboard lookup.
 
+### 4a. No-database demo option
+
+If you only want to review the product story without creating an account or loading sample data, start the app and open **Judge Mode**. It is a read-only, preloaded walkthrough and does not require MongoDB records or AI requests.
+
 ### 5. Start the app
 
 ```bash
@@ -130,9 +137,30 @@ npm run dev
 Open these pages in a browser:
 
 - Landing page: `http://localhost:4000/`
+- Judge Mode: `http://localhost:4000/judge-demo.html`
 - Student workspace: `http://localhost:4000/workspace.html`
+- Student dashboard: `http://localhost:4000/student-dashboard.html`
 - Educator dashboard: `http://localhost:4000/dashboard.html`
+- Admin dashboard: `http://localhost:4000/admin/dashboard` (admin account required)
 - Health check: `http://localhost:4000/health`
+
+## Demo data and judge walkthrough
+
+### Fastest judge walkthrough (no sign-up)
+
+1. Open `http://localhost:4000/judge-demo.html`.
+2. Select **Student learning flow** to see adaptive hints, practice, explain-back, and mastery evidence.
+3. Select **Educator intervention** to see a risk-ranked teacher queue.
+4. Select **Admin platform view** to see scale and operations metrics.
+
+### Seeded interactive walkthrough
+
+1. Run `npm run seed`.
+2. Sign in as `student@socratic.local` using `SecureDemo123`.
+3. Create a learning session, ask a question, and use **Get adaptive hint** or **Start practice**.
+4. Sign in as `educator@socratic.local` using `SecureDemo123` and load the printed student ID in the educator dashboard.
+
+The student can also upload a PDF, DOC, DOCX, or TXT syllabus (up to 8 MB) in an active learning session. The source is processed in memory, then the application generates a roadmap and starts the first guided lesson.
 
 ## How to use the product
 
@@ -167,7 +195,9 @@ All API routes are namespaced below `/api`. Protected endpoints require an `Auth
 | Explain-back rubric | `POST /learning/evaluate-explain-back` generates a level-appropriate rubric, scores a learner explanation by criterion, and stores transparent feedback as educator evidence. |
 | Session replay | `GET /analytics/session-replay/:sessionId` returns an ordered evidence timeline for the animated educator replay player. |
 | Practice and mastery | `POST /practice/generate`, `/practice/:id/submit`, `/mastery/validate`, `/explain-back/evaluate` |
-| Evidence | `GET /dashboard/student/:id`, `/dashboard/conversation/:id`, `/dashboard/overview` |
+| Syllabus roadmap | `POST /learning/roadmap-from-file` accepts an in-memory PDF, DOC, DOCX, or TXT upload and returns a roadmap plus first guided lesson. |
+| Evidence | `GET /dashboard/student/:id`, `/dashboard/conversation/:id`, `/dashboard/overview`, `/dashboard/intervention-queue` |
+| Admin | `GET /admin/platform` returns platform learning metrics, recent sessions, and API health telemetry. |
 
 See [docs/API.md](docs/API.md) for examples and response-contract details.
 
@@ -186,8 +216,13 @@ The project has also been live-tested with MongoDB Atlas and NVIDIA for registra
 ```text
 CogniFlow/
 ├── index.html                    # Premium product landing page
+├── judge-demo.html               # No-sign-up judge walkthrough
 ├── workspace.html                # Student AI tutoring workspace
+├── student-dashboard.html        # Student progress, concept, and readiness dashboard
 ├── dashboard.html                # Educator/judge evidence dashboard
+├── admin-dashboard.html          # Protected platform operations dashboard
+├── practice.html                 # Student practice submission and feedback UI
+├── ARCHITECTURE.md               # Mermaid system and flow diagrams
 ├── public/
 │   ├── app.css                   # Shared visual system
 │   └── app.js                    # Shared authenticated API client
@@ -204,7 +239,8 @@ CogniFlow/
 │   ├── utils/                    # API response, errors, async helpers
 │   └── validators/               # Zod request schemas
 ├── scripts/
-│   └── seed.js                   # Demo student and educator seed data
+│   ├── seed.js                   # Demo student and educator seed data
+│   └── remaining-api-test.js     # Optional live integration test runner
 ├── tests/
 │   └── health.test.js            # Health endpoint smoke test
 ├── docs/API.md                   # API contract notes
@@ -220,3 +256,7 @@ CogniFlow/
 - Rotate any API key or database credential ever shared in chat, screenshots, commits, or logs.
 - Use a unique long `JWT_SECRET` in every environment.
 - Before a production release, connect the password-reset flow to an email provider, add broader integration coverage, and configure monitoring/alerting.
+
+## License
+
+This project is open source under the [MIT License](LICENSE).
