@@ -144,6 +144,21 @@ Open these pages in a browser:
 - Admin dashboard: `http://localhost:4000/admin/dashboard` (admin account required)
 - Health check: `http://localhost:4000/health`
 
+## Deploy to Render
+
+This repository includes a Render Blueprint at [`render.yaml`](render.yaml).
+
+1. Sign in to [Render](https://render.com/) and select **New +** → **Blueprint**.
+2. Connect the `krrish2803/Cogni-Flow` repository and select the `main` branch.
+3. Render reads `render.yaml`, creates the `cogni-flow` Node web service, and runs `npm ci` followed by `npm start`.
+4. Enter these secret environment variables when Render prompts for them:
+   - `MONGODB_URI` — your MongoDB Atlas connection string.
+   - `NVIDIA_API_KEY` — your NVIDIA NIM API key.
+   - `CLIENT_URL` — the deployed Render URL, for example `https://cogni-flow.onrender.com`.
+5. Deploy, then open `https://<your-service>.onrender.com/health` to confirm the API is healthy.
+
+Do not copy your local `.env` file into GitHub or `render.yaml`. Render stores the secret values in its Environment settings. The service hosts both the Express API and the static frontend from the same Render URL.
+
 ## Demo data and judge walkthrough
 
 ### Fastest judge walkthrough (no sign-up)
