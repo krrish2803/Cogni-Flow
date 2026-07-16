@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Learning Dashboard — Socratic Scaffold</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="public/app.css">
+  <style>
+    .dashboard{padding:42px 0 70px}.headline{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:28px}.headline h1{margin:10px 0 0;font:500 clamp(32px,4vw,52px)/1 "Playfair Display",serif;letter-spacing:-.04em}.metrics,.grid{display:grid;gap:14px}.metrics{grid-template-columns:repeat(3,1fr);margin-bottom:14px}.grid{grid-template-columns:1.1fr .9fr}.card{padding:22px}.metric strong{display:block;margin:14px 0 4px;color:var(--goldsoft);font:500 40px "Playfair Display",serif}.metric span,.card p{color:var(--muted);font-size:12px}.progress-bar{height:9px;margin:20px 0 10px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden}.progress-bar i{display:block;height:100%;background:linear-gradient(90deg,#d1b36e,#ead7a7)}.concept,.session,.unlock{padding:12px;margin-top:9px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.025)}.concept b,.session b,.unlock b{display:block;font-size:12px}.concept span,.session span,.unlock span{display:block;margin-top:4px;color:var(--muted);font-size:11px}.empty{padding:22px}.cta{white-space:nowrap}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}@media(max-width:760px){.headline,.metrics,.grid{grid-template-columns:1fr}.headline{align-items:start}.cta{width:100%}}
+  </style>
+</head>
+<body>
+  <header class="top"><a class="brand" href="index.html"><span class="mark">S</span>Socratic Scaffold</a><nav class="top-nav"><a href="workspace.html">Learning workspace</a><span class="pill" id="user-label">Student</span><button class="button" id="logout">Sign out</button></nav></header>
+  <main class="shell dashboard">
+    <section class="headline"><div><div class="eyebrow">Your learning dashboard</div><h1>Progress you can<br><em>actually explain.</em></h1></div><a class="button gold cta" href="workspace.html">Continue learning →</a></section>
+    <section class="metrics"><article class="panel card metric"><div class="eyebrow">Mastery</div><strong id="mastery">0%</strong><div class="progress-bar"><i id="mastery-bar" style="width:0%"></i></div><span>Built through demonstrated understanding</span></article><article class="panel card metric"><div class="eyebrow">Confidence</div><strong id="confidence">0%</strong><span>Your current learning signal</span></article><article class="panel card metric"><div class="eyebrow">Guided sessions</div><strong id="sessions">0</strong><span>Active learning conversations</span></article></section>
+    <section class="grid"><article class="panel card"><div class="eyebrow">Focus concepts</div><h2 style="font:500 28px 'Playfair Display',serif;margin:13px 0 5px">What to strengthen next.</h2><div id="concepts"><div class="empty">Start a learning session to build your concept map.</div></div></article><article class="panel card"><div class="eyebrow">Learning plan</div><h2 style="font:500 28px 'Playfair Display',serif;margin:13px 0 5px">Keep the momentum.</h2><p id="recommendation">Ask a question in the workspace and work through the first guided checkpoint.</p><div class="actions"><a class="button gold" href="workspace.html">Open workspace →</a><a class="button" href="mistake-predictor.html">Check practice readiness ✦</a></div></article><article class="panel card"><div class="eyebrow">Concept pathway</div><h2 style="font:500 28px 'Playfair Display',serif;margin:13px 0 5px">What you have unlocked.</h2><p id="graph-summary">Master concepts to reveal the prerequisites completed and the next concepts ready for you.</p><div id="unlock-status"><div class="empty">Your concept pathway will appear after a mastery update.</div></div><a class="button" style="margin-top:18px" href="concept-graph.html">Open concept graph →</a></article><article class="panel card"><div class="eyebrow">Mistake predictor</div><h2 style="font:500 28px 'Playfair Display',serif;margin:13px 0 5px">Prepare before practice.</h2><p>Review your past work to identify likely confusion and get a two-minute intervention before your next task.</p><a class="button gold" style="margin-top:22px" href="mistake-predictor.html">Predict next mistake →</a></article><article class="panel card" style="grid-column:1/-1"><div class="eyebrow">Recent sessions</div><h2 style="font:500 28px 'Playfair Display',serif;margin:13px 0 5px">Your learning trail.</h2><div id="recent-sessions"><div class="empty">No sessions yet.</div></div></article></section>
+  </main>
+  <script src="public/app.js"></script>
+  <script>
+    const q = selector => document.querySelector(selector);
+    function escape(value = '') { return escapeHtml(value); }
+    async function loadDashboard() {
+      if (!session.user) { location.replace('workspace.html'); return; }
+      if (session.user.role !== 'student') { location.replace('dashboard.html'); return; }
+      q('#user-label').textContent = session.user.name;
+      const [dashboard, conversations] = await Promise.all([api('/learning-state/dashboard/me'), api('/conversations')]);
+      const state = dashboard.learningState;
+      q('#mastery').textContent = `${Math.round(state.masteryProgress || 0)}%`;
+      q('#mastery-bar').style.width = `${state.masteryProgress || 0}%`;
+      q('#confidence').textContent = `${Math.round(state.confidenceLevel || 0)}%`;
+      q('#sessions').textContent = dashboard.sessions || 0;
+      const concepts = [...(state.weakConcepts || []), ...(state.knownConcepts || [])].slice(-6);
+      q('#concepts').innerHTML = concepts.length ? concepts.map(concept => `<div class="concept"><b>${escape(concept.name)}</b><span>${Math.round(concept.score || 0)}% understanding · ${escape(concept.evidence || 'Keep practising with a guided checkpoint.')}</span></div>`).join('') : '<div class="empty">Your next concepts will appear after a guided session.</div>';
+      const nodes = state.conceptGraph?.nodes || [];
+      const mastered = nodes.filter(node => node.status === 'mastered');
+      const ready = nodes.filter(node => node.status === 'ready');
+      q('#graph-summary').textContent = state.conceptGraph?.reasoningSummary || 'Master concepts to reveal the prerequisites completed and the next concepts ready for you.';
+      q('#unlock-status').innerHTML = nodes.length ? `<div class="unlock"><b>Prerequisites complete</b><span>${mastered.length ? mastered.map(node => escape(node.label)).join(', ') : 'Keep working through guided checkpoints.'}</span></div><div class="unlock"><b>Topics unlocked next</b><span>${ready.length ? ready.map(node => escape(node.label)).join(', ') : 'No next topic unlocked yet.'}</span></div>` : '<div class="empty">Your concept pathway will appear after a mastery update.</div>';
+      q('#recommendation').textContent = state.repeatedErrorPatterns?.length ? `Focus next on: ${state.repeatedErrorPatterns[0]}` : state.lastPracticedTopic ? `Continue practising ${state.lastPracticedTopic} with one more checkpoint.` : 'Ask a question in the workspace and work through the first guided checkpoint.';
+      q('#recent-sessions').innerHTML = conversations.conversations.length ? conversations.conversations.slice(0, 5).map(item => `<a class="session" href="workspace.html"><b>${escape(item.title)}</b><span>${escape(item.subject)} · ${item.masteryScore || 0}% mastery · ${item.checkpointsCompleted || 0} checkpoints</span></a>`).join('') : '<div class="empty">No sessions yet.</div>';
+    }
+    q('#logout').onclick = async () => { try { await api('/auth/logout', { method: 'POST' }); } catch (_) {} session.token = null; session.user = null; location.replace('workspace.html'); };
+    loadDashboard().catch(error => { q('#recommendation').textContent = error.message; });
+  </script>
+</body>
+</html>

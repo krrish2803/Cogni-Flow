@@ -1,0 +1,4 @@
+const jwt = require('jsonwebtoken'); const env = require('../config/env'); const User = require('../models/User'); const AppError = require('../utils/AppError'); const asyncHandler = require('../utils/asyncHandler');
+const protect = asyncHandler(async (req, res, next) => { const token = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : req.cookies?.accessToken; if (!token) throw new AppError('Authentication required', 401); try { const payload = jwt.verify(token, env.JWT_SECRET); const user = await User.findById(payload.sub); if (!user) throw new AppError('Account no longer exists', 401); req.user = user; next(); } catch (error) { if (error.name === 'TokenExpiredError') throw new AppError('Access token expired', 401); throw error; } });
+const allow = (...roles) => (req, res, next) => roles.includes(req.user.role) ? next() : next(new AppError('Insufficient permissions', 403));
+module.exports = { protect, allow };

@@ -1,0 +1,2 @@
+const logger = require('../lib/logger'); const { systemInfo } = require('../utils/api');
+module.exports = (error, req, res, next) => { logger.error({ error, traceId: req.id }, 'request failed'); const status = error.statusCode || (error.name === 'CastError' ? 404 : 500); res.status(status).json({ success: false, error: { message: error.isOperational ? error.message : 'Internal server error', ...(error.details && { details: error.details }), traceId: req.id }, system_info: systemInfo(req) }); };

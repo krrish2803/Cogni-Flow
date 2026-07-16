@@ -1,0 +1,40 @@
+{
+  "name": "socratic-scaffold-api",
+  "version": "1.0.0",
+  "description": "API for Socratic Scaffold's action-gated AI tutoring workflow.",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "seed": "node scripts/seed.js",
+    "test": "jest --runInBand",
+    "test:integration": "node scripts/integration-test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mammoth": "^1.8.0",
+    "mongoose": "^8.9.5",
+    "morgan": "^1.10.0",
+    "multer": "^2.2.0",
+    "pdf-parse": "^1.1.1",
+    "pino": "^9.5.0",
+    "pino-http": "^10.3.0",
+    "word-extractor": "^1.0.4",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
+    "supertest": "^7.0.0"
+  }
+}

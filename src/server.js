@@ -1,0 +1,2 @@
+const app = require('./app'); const connectDatabase = require('./config/database'); const env = require('./config/env'); const logger = require('./lib/logger');
+(async () => { try { await connectDatabase(); const server = app.listen(env.PORT, () => logger.info({ port: env.PORT }, 'API listening')); const shutdown = signal => server.close(() => process.exit(0)); process.on('SIGTERM', shutdown); process.on('SIGINT', shutdown); } catch (error) { logger.fatal({ error }, 'Failed to start API'); process.exit(1); } })();

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Adaptive Hint Ladder — Socratic Scaffold</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono&family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="public/app.css">
+  <style>
+    .page{width:min(980px,calc(100% - 42px));margin:0 auto;padding:52px 0}.intro{max-width:650px}.intro h1{margin:13px 0;font:500 clamp(38px,6vw,62px)/.98 "Playfair Display",serif;letter-spacing:-.05em}.intro p{color:var(--muted);line-height:1.65;font-size:14px}.form{margin:32px 0;padding:22px}.form label{display:block;margin-bottom:8px;color:var(--goldsoft);font:10px "DM Mono";letter-spacing:.1em;text-transform:uppercase}.form textarea{width:100%;min-height:112px;padding:13px;border:1px solid var(--line);border-radius:9px;background:rgba(0,0,0,.18);color:var(--ivory);resize:vertical}.form .button{margin-top:12px}.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}.hint{padding:17px;min-height:185px}.hint b{display:block;margin:18px 0 8px;font:500 19px "Playfair Display",serif}.hint p{color:#d5d7ca;font-size:12px;line-height:1.55}.hint span{display:block;color:var(--muted);font-size:10px;line-height:1.45}.rationale{margin-top:14px;padding:22px}.rationale h2{margin:10px 0;font:500 27px "Playfair Display",serif}.rationale p{color:var(--muted);font-size:13px;line-height:1.65}.evidence{margin:15px 0 0;padding-left:18px;color:#c9cdbf;font-size:12px;line-height:1.7}@media(max-width:720px){.ladder{grid-template-columns:1fr 1fr}}@media(max-width:440px){.page{width:min(100% - 28px,980px);padding-top:30px}.ladder{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header class="top"><a class="brand" href="workspace.html"><span class="mark">S</span>Socratic Scaffold</a><nav class="top-nav"><a href="workspace.html">Workspace</a><a href="dashboard.html">Educator dashboard</a><span class="pill" id="identity">Adaptive learning</span></nav></header>
+  <main class="page"><section class="intro"><div class="eyebrow">Personalized reasoning support</div><h1>A hint ladder built around <em>this</em> learner.</h1><p>Use the learner’s current session, learning state, and recurring mistakes to calibrate a four-step Socratic path. The rationale below is an educator-readable summary of the evidence used—not a private model reasoning trace.</p></section>
+    <form class="panel form" id="form"><label for="conversation">Conversation ID</label><input class="input" id="conversation" required placeholder="Paste the active conversation ID"><label for="question" style="margin-top:16px">Question context</label><textarea id="question" required placeholder="Example: I do not understand why x is unavailable outside this function."></textarea><button class="button gold">Generate adaptive ladder ✦</button></form>
+    <section id="result" class="hidden"><div class="eyebrow">Calibrated next steps</div><div class="ladder" id="ladder" style="margin-top:13px"></div><article class="panel rationale"><div class="eyebrow">Educator rationale</div><h2 id="misconception"></h2><p id="trace"></p><ul class="evidence" id="evidence"></ul></article></section>
+  </main>
+  <div id="auth" class="modal"><form class="panel auth" id="auth-form"><div class="eyebrow">Student access</div><h1>Continue your<br><em>learning path.</em></h1><p>Sign in before generating personalized guidance.</p><div class="field"><label>Email</label><input id="email" type="email" required></div><div class="field"><label>Password</label><input id="password" type="password" required></div><button class="button gold">Sign in →</button></form></div>
+  <script src="public/app.js"></script><script>
+    const $=selector=>document.querySelector(selector);const toast=message=>{const el=document.createElement('div');el.className='toast';el.textContent=message;document.body.append(el);setTimeout(()=>el.remove(),3500)};
+    $('#auth-form').onsubmit=async event=>{event.preventDefault();try{const user=await authenticate($('#email').value,$('#password').value);$('#auth').classList.add('hidden');$('#identity').textContent=user.name}catch(error){toast(error.message)}};
+    $('#form').onsubmit=async event=>{event.preventDefault();const button=$('#form button');button.disabled=true;button.textContent='Calibrating…';try{const data=await api('/learning/adaptive-hint-ladder',{method:'POST',body:{conversationId:$('#conversation').value.trim(),question:$('#question').value.trim()}});const ladder=data.ladder;$('#result').classList.remove('hidden');$('#ladder').innerHTML=(ladder.hintLadder||[]).map(item=>`<article class="panel hint"><div class="eyebrow">Level ${item.level}</div><b>${escapeHtml(item.hint)}</b><span>${escapeHtml(item.reasoning)}</span></article>`).join('');$('#misconception').textContent=ladder.misconceptionDetected;$('#trace').textContent=ladder.reasoningTrace;$('#evidence').innerHTML=(ladder.evidenceSummary||[]).map(item=>`<li>${escapeHtml(item)}</li>`).join('')}catch(error){toast(error.message)}finally{button.disabled=false;button.textContent='Generate adaptive ladder ✦'}};
+    if(session.user){$('#auth').classList.add('hidden');$('#identity').textContent=session.user.name}
+  </script>
+</body>
+</html>
