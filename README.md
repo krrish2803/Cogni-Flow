@@ -159,6 +159,19 @@ This repository includes a Render Blueprint at [`render.yaml`](render.yaml).
 
 Do not copy your local `.env` file into GitHub or `render.yaml`. Render stores the secret values in its Environment settings. The service hosts both the Express API and the static frontend from the same Render URL.
 
+## Deploy frontend to Netlify
+
+This repository includes [`netlify.toml`](netlify.toml). It publishes only the HTML and `public/` frontend assets to Netlify, then proxies browser calls from `/api/*` to the Render backend at `https://cogni-flow.onrender.com/api/*`.
+
+1. In [Netlify](https://app.netlify.com/), select **Add new site** → **Import an existing project**.
+2. Choose the `krrish2803/Cogni-Flow` repository and the `main` branch.
+3. Netlify detects `netlify.toml`; keep the configured build command and publish directory.
+4. Deploy the site.
+5. Copy the generated `https://<site-name>.netlify.app` URL.
+6. In Render, open the `cogni-flow` service → **Environment**, set `CLIENT_URL` to that exact Netlify URL, then select **Save and deploy**.
+
+The proxy keeps the frontend API base as `/api`, so no API key or backend URL is exposed in browser JavaScript.
+
 ## Demo data and judge walkthrough
 
 ### Fastest judge walkthrough (no sign-up)
